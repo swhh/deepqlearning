@@ -1,36 +1,51 @@
+import sys
+
 import gym
-import cProfile
 
 from deepqnetwork import DeepQNetwork
 from agent import Agent
 from replaymemory import ReplayMemory
-
+import matplotlib.pyplot as plt
 from utils import Phi
 import numpy as np
 
+import time
 
-env = gym.make('Breakout-v0')
-num_actions = env.action_space.n
 
-dqn = DeepQNetwork(num_actions, (4, 84, 84))
+def main(game, episodes, game_time_limit, training_mode=False, log=False):
+    env = gym.make(game)
+    num_actions = env.action_space.n
+    dqn = DeepQNetwork(num_actions, (4, 84, 84))
+    replay = ReplayMemory(100000)
+    obs = env.reset()
+    h, w, c = obs.shape
+    phi = Phi(4, 84, 84, c, h, w)
+    agent = Agent(replay, dqn, training_mode=training_mode)
 
-replay = ReplayMemory(100000)
+    for i_episode in range(episodes):
+        observation = env.reset()
+        pre_state = phi.add(observation)
+        for t in range(game_time_limit):
+            env.render()
+            action = agent.get_action(pre_state)
+            observation, reward, done, info = env.step(action)
+            post_state = phi.add(observation)
+            agent.update_replay_memory(pre_state, action, reward, post_state, done)
+            pre_state = post_state
 
-phi = Phi(84, 84, 4)
+            if done:
+                print("Episode finished after {} timesteps".format(t+1))
+                break
+        phi.reset()
+    if log:
+        dqn.save_model('results/model_weights.hdf5')
 
-agent = Agent(replay, dqn, phi)
+if __name__ == '__main__':
+    game = 'Breakout-v0'
+    args = sys.argv[1:]
+    episodes, game_time_limit, training_mode, log = args[:4]
 
-for i_episode in range(200):
-    observation = env.reset()
-    for t in range(10):
-        env.render()
-        pre_state = observation
-        action = agent.get_action(observation)
-        observation, reward, done, info = env.step(action)
-        agent.update_replay_memory(pre_state, action, reward, observation, done)
+    main(game, int(episodes), int(game_time_limit), training_mode=bool(training_mode), log=bool(log))
 
-        if done:
-            print("Episode finished after {} timesteps".format(t+1))
-            break
 
 

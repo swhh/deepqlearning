@@ -1,13 +1,12 @@
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
-from keras.utils import np_utils
 from keras.layers import Convolution2D, MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 import numpy as np
 from keras import backend as K
+from keras.callbacks import CSVLogger
 
-from utils import set_input, clipped_mean_squared_error
-import time
+from utils import clipped_mean_squared_error
 
 np.random.seed(123)
 
@@ -43,31 +42,28 @@ class DeepQNetwork(object):
 
     def train(self, minibatch):
         states, rewards, actions, future_states, terminals = zip(*minibatch)
-        rewards, actions, terminals = np.array(rewards), np.array(actions, dtype=np.uint8), np.array(terminals)
+        rewards, actions, terminals = np.array(rewards, dtype=np.float32), np.array(actions, np.int32), np.array(terminals)
+        states, future_states = np.array(states, dtype=np.float32), np.array(future_states, dtype=np.float32)
         rewards = np.clip(rewards, -1, 1)   # clip rewards
 
-        q_values = self.predict(states) # predicted q values for all actions
+        q_values = self.predict(states)  # q values for all actions
         target_q_values = self.predict(future_states, is_q_model=False)
         q_values[np.arange(len(minibatch)), actions] = rewards
         q_values[np.arange(len(minibatch)), actions] += self.discount * ~terminals * np.max(target_q_values, axis=1)
         # if action didn't result in terminal state, add q max action
+        loss = self.q_model.train_on_batch(states, q_values)
+        # NB: not efficient since train method computes the forward pass again
 
-        if self.time_step % 10000 == 0:
-            verbose = 1
-        else:
-            verbose = 0
-
-        self.q_model.fit(set_input(states), q_values, batch_size=self.batch_size, nb_epoch=1, verbose=verbose)
         self.time_step += 1
 
-        if self.time_step % self.c == 0:
+        if self.time_step > 0 and self.time_step % self.c == 0:
             self.q_target_model.set_weights(self.q_model.get_weights())
 
     def predict(self, states, is_q_model=True):
         if is_q_model:
-            return self.q_model.predict(set_input(states))
+            return self.q_model.predict_on_batch(states)
 
-        return self.q_target_model.predict(set_input(states))
+        return self.q_target_model.predict_on_batch(states)
 
     def load_model(self, filename):
         self.q_model.load_weights(filename)

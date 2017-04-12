@@ -5,7 +5,6 @@ import gym
 from deepqnetwork import DeepQNetwork
 from agent import Agent
 from replaymemory import ReplayMemory
-import matplotlib.pyplot as plt
 from utils import Phi
 import numpy as np
 
@@ -25,6 +24,7 @@ def main(game, episodes, game_time_limit, training_mode=False, log=False):
     for i_episode in range(episodes):
         observation = env.reset()
         pre_state = phi.add(observation)
+        game_score = 0
         for t in range(game_time_limit):
             env.render()
             action = agent.get_action(pre_state)
@@ -32,9 +32,10 @@ def main(game, episodes, game_time_limit, training_mode=False, log=False):
             post_state = phi.add(observation)
             agent.update_replay_memory(pre_state, action, reward, post_state, done)
             pre_state = post_state
+            game_score += reward
 
             if done:
-                print("Episode finished after {} timesteps".format(t+1))
+                print("Episode finished after {} timesteps with score {}".format(t+1, game_score))
                 break
         phi.reset()
     if log:

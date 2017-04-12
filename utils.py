@@ -3,7 +3,6 @@ import random
 from skimage.color import rgb2gray
 from skimage.transform import resize
 import numpy as np
-from keras import backend as K
 
 random.seed(123)
 
@@ -50,8 +49,3 @@ def biased_flip(p):
     if random.random() < p:
         return True
     return False
-
-
-def clipped_mean_squared_error(y_true, y_predict):
-    clipped_squared_error = K.clip(K.square(y_true - y_predict), -1, 1)
-    return K.mean(clipped_squared_error)

@@ -4,9 +4,6 @@ from keras.layers import Convolution2D, MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 import numpy as np
 from keras import backend as K
-from keras.callbacks import CSVLogger
-
-from utils import clipped_mean_squared_error
 
 np.random.seed(123)
 
@@ -35,7 +32,7 @@ class DeepQNetwork(object):
         q_model.add(Dense(512, activation='relu'))
         q_model.add(BatchNormalization())
         q_model.add(Dense(num_actions, activation='linear'))
-        q_model.compile(optimizer='RMSprop', loss=clipped_mean_squared_error)
+        q_model.compile(optimizer='RMSprop', loss='mean_squared_error')
 
         self.q_model = q_model
         self.q_target_model = Sequential.from_config(q_model.get_config())  # create target model
@@ -51,7 +48,7 @@ class DeepQNetwork(object):
         q_values[np.arange(len(minibatch)), actions] = rewards
         q_values[np.arange(len(minibatch)), actions] += self.discount * ~terminals * np.max(target_q_values, axis=1)
         # if action didn't result in terminal state, add q max action
-        loss = self.q_model.train_on_batch(states, q_values)
+        self.q_model.train_on_batch(states, q_values)
         # NB: not efficient since train method computes the forward pass again
 
         self.time_step += 1

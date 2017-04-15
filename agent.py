@@ -2,8 +2,8 @@ import random
 import numpy as np
 
 from utils import biased_flip
+import time
 
-np.random.seed(123)
 random.seed(123)
 
 
@@ -24,7 +24,7 @@ class Agent(object):
 
     def get_action(self, state):
 
-        if self.time_step < self.final_explore_frame and biased_flip(self.current_explore_rate):
+        if self.train and self.time_step < self.final_explore_frame and biased_flip(self.current_explore_rate):
             action = random.choice(range(self.num_actions))   # pick random action to explore state space
 
         else:
@@ -35,7 +35,7 @@ class Agent(object):
             mini_batch = self.replay.getMinibatch(self.dqnet.batch_size)
             self.dqnet.train(mini_batch)
 
-        if self.replay_start_size <= self.time_step < self.final_explore_frame:
+        if self.train and self.replay_start_size <= self.time_step < self.final_explore_frame:
             self.current_explore_rate -= self.decrement_explore_rate  # anneal explore rate
 
         self.time_step += 1

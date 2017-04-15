@@ -4,6 +4,8 @@ from skimage.color import rgb2gray
 from skimage.transform import resize
 import numpy as np
 
+from keras import backend as K
+
 random.seed(123)
 
 
@@ -27,14 +29,8 @@ class Phi(object):
         """Adds latest screen and returns latest four processed screens processed as nd array"""
 
         self.frames.append(screen.astype(np.uint8))  # store original screen as 8 bit int
+        self.frames.pop(0)
 
-        if len(self.frames) > self.channels:
-            self.frames.pop(0)
-
-        processed_screens = [resize(rgb2gray(screen), (self.new_height, self.new_width)) for screen in self.frames]
-        return np.array(processed_screens, dtype=np.float32)
-
-    def latest_state(self):
         processed_screens = [resize(rgb2gray(screen), (self.new_height, self.new_width)) for screen in self.frames]
         return np.array(processed_screens, dtype=np.float32)
 
@@ -49,3 +45,9 @@ def biased_flip(p):
     if random.random() < p:
         return True
     return False
+
+
+def huber_loss(y_true, y_pred):
+    x = y_true - y_pred
+    return K.switch(K.abs(x) < 1.0, 0.5 * K.square(x), K.abs(x) - 0.5)
+

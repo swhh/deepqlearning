@@ -5,6 +5,8 @@ from keras.layers.normalization import BatchNormalization
 import numpy as np
 from keras import backend as K
 
+from utils import huber_loss
+
 np.random.seed(123)
 
 
@@ -32,7 +34,7 @@ class DeepQNetwork(object):
         q_model.add(Dense(512, activation='relu'))
         q_model.add(BatchNormalization())
         q_model.add(Dense(num_actions, activation='linear'))
-        q_model.compile(optimizer='RMSprop', loss='mean_squared_error')
+        q_model.compile(optimizer='RMSprop', loss=huber_loss)
 
         self.q_model = q_model
         self.q_target_model = Sequential.from_config(q_model.get_config())  # create target model

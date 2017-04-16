@@ -17,8 +17,5 @@ class ReplayMemory(object):
         if len(self.memories) > self.size:
             self.memories.pop(0)
 
-    def getMemorySize(self):
-        return len(self.memories)
-
     def getMinibatch(self, batch_size):
         return sample(self.memories, batch_size)

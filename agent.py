@@ -2,7 +2,6 @@ import random
 import numpy as np
 
 from utils import biased_flip
-import time
 
 random.seed(123)
 
@@ -21,6 +20,7 @@ class Agent(object):
         self.time_step = 0
         self.current_explore_rate = self.init_explore_rate
         self.decrement_explore_rate = (self.init_explore_rate - self.final_explore_rate) / (self.final_explore_frame - self.replay_start_size)
+        self.current_loss = 0
 
     def get_action(self, state):
 
@@ -33,7 +33,7 @@ class Agent(object):
 
         if self.train and self.replay_start_size <= self.time_step:
             mini_batch = self.replay.getMinibatch(self.dqnet.batch_size)
-            self.dqnet.train(mini_batch)
+            self.current_loss = self.dqnet.train(mini_batch)
 
         if self.train and self.replay_start_size <= self.time_step < self.final_explore_frame:
             self.current_explore_rate -= self.decrement_explore_rate  # anneal explore rate
@@ -43,6 +43,9 @@ class Agent(object):
 
     def update_replay_memory(self, pre_state, action, reward, post_state, terminal):
         self.replay.add(pre_state, action, reward, post_state, terminal)
+
+    def get_loss(self):
+        return self.current_loss
 
 
 

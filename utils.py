@@ -20,15 +20,14 @@ class Phi(object):
         self.new_height = new_height
         self.new_width = new_width
 
-        # add empty frames to start with
-        for i in range(frame_num):
-            zeros = np.zeros((height, width, channels), dtype=np.uint8)
-            self.frames.append(zeros)
-
     def add(self, screen):
         """Adds latest screen and returns latest four processed screens processed as nd array"""
 
+        if not self.frames:
+            self.frames = [screen.astype(np.uint8) for _ in range(self.frame_num)]
+
         self.frames.append(screen.astype(np.uint8))  # store original screen as 8 bit int
+
         self.frames.pop(0)
 
         processed_screens = [resize(rgb2gray(screen), (self.new_height, self.new_width)) for screen in self.frames]
@@ -36,9 +35,6 @@ class Phi(object):
 
     def reset(self):
         self.frames = []
-        for i in range(self.frame_num):
-            zeros = np.zeros((self.height, self.width, self.channels), dtype=np.uint8)
-            self.frames.append(zeros)
 
 
 def biased_flip(p):

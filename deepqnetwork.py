@@ -3,7 +3,6 @@ from keras.layers import Dense, Activation, Flatten
 from keras.layers import Convolution2D, MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 import numpy as np
-from keras import backend as K
 
 from utils import huber_loss
 
@@ -50,13 +49,15 @@ class DeepQNetwork(object):
         q_values[np.arange(len(minibatch)), actions] = rewards
         q_values[np.arange(len(minibatch)), actions] += self.discount * ~terminals * np.max(target_q_values, axis=1)
         # if action didn't result in terminal state, add q max action
-        self.q_model.train_on_batch(states, q_values)
+        loss = self.q_model.train_on_batch(states, q_values)
         # NB: not efficient since train method computes the forward pass again
 
         self.time_step += 1
 
         if self.time_step > 0 and self.time_step % self.c == 0:
             self.q_target_model.set_weights(self.q_model.get_weights())
+
+        return loss
 
     def predict(self, states, is_q_model=True):
         if is_q_model:

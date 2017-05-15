@@ -45,5 +45,5 @@ def biased_flip(p):
 
 def huber_loss(y_true, y_pred):
     x = y_true - y_pred
-    return K.switch(K.abs(x) < 1.0, 0.5 * K.square(x), K.abs(x) - 0.5)
+    return K.mean(K.switch(K.abs(x) < 1.0, 0.5 * K.square(x), K.abs(x) - 0.5))
 

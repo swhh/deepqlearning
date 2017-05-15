@@ -35,8 +35,8 @@ class Agent(object):
             mini_batch = self.replay.getMinibatch(self.dqnet.batch_size)
             self.current_loss = self.dqnet.train(mini_batch)
 
-        if self.train and self.replay_start_size <= self.time_step < self.final_explore_frame:
-            self.current_explore_rate -= self.decrement_explore_rate  # anneal explore rate
+            if self.time_step < self.final_explore_frame:
+                self.current_explore_rate -= self.decrement_explore_rate  # anneal explore rate
 
         self.time_step += 1
         return action

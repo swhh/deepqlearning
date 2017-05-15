@@ -1,4 +1,3 @@
-import numpy as np
 import csv
 
 
@@ -45,8 +44,7 @@ class Stats(object):
         self.csv_file.flush()
 
     def close(self):
-        if self.csv_file_name:
-            self.csv_file.close()
+        self.csv_file.close()
 
 
 

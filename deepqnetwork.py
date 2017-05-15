@@ -46,8 +46,8 @@ class DeepQNetwork(object):
 
         q_values = self.predict(states)  # q values for all actions
         target_q_values = self.predict(future_states, is_q_model=False)
-        q_values[np.arange(len(minibatch)), actions] = rewards
-        q_values[np.arange(len(minibatch)), actions] += self.discount * ~terminals * np.max(target_q_values, axis=1)
+        q_values[np.arange(self.batch_size), actions] = rewards
+        q_values[np.arange(self.batch_size), actions] += self.discount * ~terminals * np.max(target_q_values, axis=1)
         # if action didn't result in terminal state, add q max action
         loss = self.q_model.train_on_batch(states, q_values)
         # NB: not efficient since train method computes the forward pass again
